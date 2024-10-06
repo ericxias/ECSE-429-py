@@ -39,15 +39,15 @@ def test_get_categories_with_todos_id():
         if "categories" in todos["todos"][0] and todos["todos"][0]["categories"] != []:
             # Get the id of the first category of the first todo and check that the categories of the first todo match the categories of the first category
             response1 = requests.get('http://localhost:4567/todos/' + str(todo_id) + '/categories')
-            category_data = {}
+            category_data = {"categories": []}
             
             # Check if the categories of the first todo match the category data retrieved
-            for i in range(len(todos["todos"][0]["categories"]) - 1):
-                response2 = requests.get('http://localhost:4567/categories/' + todos["todos"][0]["categories"][i+1]["id"])
-                category_data += response2.json()["categories"]
+            for category in todos["todos"][0]["categories"]:
+                response2 = requests.get('http://localhost:4567/categories/' + category["id"])
+                category_data["categories"].append(response2.json()["categories"][0])
 
             response3 = requests.get('http://localhost:4567/todos/'+ todo_id + '/categories')
-            assert response3.json() == {"categories" : [category_data]}
+            assert response3.json() == category_data
             assert response1.status_code == 200
 
         else:
@@ -77,16 +77,16 @@ def test_get_tasksof_with_todos_id():
         if "tasksof" in todos["todos"][0] and todos["todos"][0]["tasksof"] != []:
             # Get the id of the first tasksof of the first todo and check that the tasksof of the first todo match the tasksof of the first tasksof
             response1 = requests.get('http://localhost:4567/todos/' + str(todo_id) + '/tasksof')
-            tasksof_data = {}
-            # for each tasksof of the first todo, get the tasksof data and add it to the tasksof_data dictionary
+            tasksof_data = {"projects": []}
 
-            for i in range(len((todos["todos"][0]["tasksof"])) - 1):
-                response2 = requests.get('http://localhost:4567/tasksof/' + todos["todos"][0]["tasksof"][i+1]["id"])
-                tasksof_data += response2.json()["tasksof"]
+            # for each tasksof of the first todo, get the tasksof data and add it to the tasksof_data dictionary
+            for project in todos["todos"][0]["tasksof"]:
+                response2 = requests.get('http://localhost:4567/tasksof/' + project["id"])
+                tasksof_data["projects"].append(response2.json()["projects"][0])
 
             # Check if the tasksof of the first todo match the tasksof data retrieved        
             response3 = requests.get('http://localhost:4567/todos/'+ todo_id + '/tasksof')
-            assert response3.json() == {"projects": [tasksof_data]}
+            assert response3.json() == tasksof_data
             assert response1.status_code == 200
 
         else:
@@ -153,7 +153,6 @@ def test_update_todo_with_post():
 def test_update_todo_with_put():
     # Test update todos with id
     response = requests.get('http://localhost:4567/todos')
-
     todos = response.json()
 
     # Check if any todos exist
@@ -161,11 +160,11 @@ def test_update_todo_with_put():
         # Get the id of the first todo
         todo_id = todos["todos"][0]["id"]
         response1 = requests.put('http://localhost:4567/todos/' + str(todo_id), json={"title":"test","doneStatus": True,"description":""})
+        assert response1.status_code == 200
 
         # Check if the todo is updated
         response2 = requests.get('http://localhost:4567/todos/' + str(todo_id))
         assert response1.json() == response2.json()["todos"][0]
-        assert response1.status_code == 200
 
         # test the error message when attempting to update without inputting a title
         response2 = requests.put('http://localhost:4567/todos/' + str(todo_id), json={"doneStatus": True,"description":""})
@@ -178,11 +177,75 @@ def test_update_todo_with_put():
         assert response3.json() == {"errorMessages":["Invalid GUID for 1 entity todo"]}
         assert response3.status_code == 404
 
-""" def test_creating_category_relationship():
+def test_creating_category_relationship():
     # Test create relationship of category with todo with id
     response = requests.get('http://localhost:4567/todos')
     response2 = requests.get('http://localhost:4567/categories')
+    todos = response.json()
+    categories = response2.json()
 
+    # Check if any todos exist
+    if response.status_code == 200 and isinstance(todos, dict) and len(todos) > 0:
+        # Get the id of the first todo
+        todo_id = todos["todos"][0]["id"]
+
+        # Check if any categories exist
+        if response2.status_code == 200 and isinstance(categories, dict) and len(categories) > 0:
+            # Get the id of the first category
+            category_id = categories["categories"][0]["id"]
+            # Create relationship of category with todo with id
+            response3 = requests.post('http://localhost:4567/todos/' + str(todo_id) + '/categories', json={"id": category_id})
+            assert response3.status_code == 201
+
+            # Check if the category relationship is created
+            response4 = requests.get('http://localhost:4567/todos/' + str(todo_id))
+            assert {"id": category_id} in response4.json()["todos"][0]["categories"] 
+        else:
+            # if the category id does not exist, error message
+            response5 = requests.post('http://localhost:4567/todos/' + str(todo_id) + '/categories', json={"id": 1})
+            assert response5.json() == {"errorMessages":["Could not find thing matching value for id"]}
+            assert response5.status_code == 404
+    else:
+        # if the todo id does not exist, error message
+        response6 = requests.post('http://localhost:4567/todos/1/categories', json={"id": 1})
+        assert response6.json() == {{"errorMessages":["Could not find parent thing for relationship todos/1/categories"]}}
+        assert response6.status_code == 404
+
+def test_creating_taskof_relationship():
+     # Test create relationship of category with todo with id
+    response = requests.get('http://localhost:4567/todos')
+    response2 = requests.get('http://localhost:4567/projects')
+    todos = response.json()
+    projects = response2.json()
+
+    # Check if any todos exist
+    if response.status_code == 200 and isinstance(todos, dict) and len(todos) > 0:
+        # Get the id of the first todo
+        todo_id = todos["todos"][0]["id"]
+
+        # Check if any categories exist
+        if response2.status_code == 200 and isinstance(projects, dict) and len(projects) > 0:
+            # Get the id of the first project
+            project_id = projects["projects"][0]["id"]
+            # Create relationship of category with todo with id
+            response3 = requests.post('http://localhost:4567/todos/' + str(todo_id) + '/tasksof', json={"id": project_id})
+            assert response3.status_code == 201
+
+            # Check if the category relationship is created
+            response4 = requests.get('http://localhost:4567/todos/' + str(todo_id))
+            assert {"id": project_id} in response4.json()["todos"][0]["tasksof"]
+
+        else:
+            # if the project id does not exist, error message
+            response5 = requests.post('http://localhost:4567/todos/' + str(todo_id) + '/tasksof', json={"id": 1})
+            assert response5.json() == {"errorMessages":["Could not find thing matching value for id"]}
+            assert response5.status_code == 404
+            
+    else:
+        # if the todo id does not exist, error message
+        response6 = requests.post('http://localhost:4567/todos/1/tasksof', json={"id": 1})
+        assert response6.json() == {{"errorMessages":["Could not find parent thing for relationship todos/1/tasksof"]}}
+        assert response6.status_code == 404
 
 
 def test_delete_category_relationship():
@@ -198,7 +261,7 @@ def test_delete_taskof_relationship():
 def test_delete_todo():
     # Test delete todo with id 
     response = requests.get('http://localhost:4567/todos')
- """
+
 # Run the tests
 if __name__ == '__main__':
     pytest.main()
