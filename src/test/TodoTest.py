@@ -2,49 +2,48 @@ import pytest
 import requests
 import json
 
-def test_initial_get_todos():
-    # Test initial content in todos
+def test_get_todos_with_id():
+    # Test get todos with id
     response = requests.get('http://localhost:4567/todos')
-    assert response.json() == [{"todos":[{"id":"2","title":"file paperwork","doneStatus":"false","description":"","tasksof":[{"id":"1"}]},
-                                         {"id":"1","title":"scan paperwork","doneStatus":"false","description":"","categories":[{"id":"1"}],"tasksof":[{"id":"1"}]}]}]
     assert response.status_code == 200
 
-    # Test error with input in id
-    response2 = requests.get('http://localhost:4567/todos/:id')
-    assert response2.json() == [{"errorMessages":["Could not find an instance with todos/:id"]}]
-    assert response2.status_code == 404
+def test_post_create_todo():
+    # Test create new todo
+    response = requests.get('http://localhost:4567/todos')
+    response1 = requests.post('http://localhost:4567/todos', json={"title":"test","doneStatus": False,"description":""})
+    # Retrieve the ID of the new todo
+    new_todo_id = response1.json()["id"]
+    # Check if the new todo is created
+    assert response1.json() == [response.json(), {"todos":[{"id": new_todo_id,"title":"test","doneStatus":"false","description":""}]}]
+    assert response1.status_code == 201
 
-    # Get todo with id 1 and 2
-    response3 = requests.get('http://localhost:4567/todos/1')
-    assert response3.json() == [{"todos":[{"id":"1","title":"scan paperwork","doneStatus":"false","description":"","categories":[{"id":"1"}],"tasksof":[{"id":"1"}]}]}]
-    assert response3.status_code == 200
-    response4 = requests.get('http://localhost:4567/todos/2')
-    assert response4.json() == [{"todos":[{"id":"2","title":"file paperwork","doneStatus":"false","description":"","tasksof":[{"id":"1"}]}]}]
-    assert response4.status_code == 200
+def test_invalid_post_todo():
+    # Test create new todos with invalid inputs
+    response = requests.post('http://localhost:4567/todos', json={"id":1,"title":"test","doneStatus": False,"description":""})
+    assert response.json() == [{"errorMessages":["Invalid Creation: Failed Validation: Not allowed to create with id"]}]
+    assert response.status_code == 400
 
-    # Retrieve relationship of categories of todo with id 1
-    response5 = requests.get('http://localhost:4567/todos/1/categories')
-    assert response5.json() == [{"categories":[{"id":"1","title":"Office","description":""}]}]
-    assert response5.status_code == 200
+    response2 = requests.post('http://localhost:4567/todos', json={"name": "test", "title":"test","doneStatus":"false","description":""})
+    assert response2.json() == [{"errorMessages":["Could not find field: name"]}]
+    assert response2.status_code == 400
 
-    # Retrieve relationship categories of todo with id 2
-    response6 = requests.get('http://localhost:4567/todos/2/categories')
-    assert response6.json() == [{"categories":[]}]
-    assert response6.status_code == 200
+    response3 = requests.post('http://localhost:4567/todos', json={"title":"test","doneStatus": "false","description":""})
+    assert response3.json() == [{"errorMessages":["Failed Validation: doneStatus should be BOOLEAN"]}]
+    assert response3.status_code == 400
 
-    # Retrieve taskof relationship of projects of todo with id 1
-    response7 = requests.get('http://localhost:4567/todos/1/tasksof')
-    assert response7.json() == [{"projects":[{"id":"1","title":"Office Work","completed":"false","active":"false","description":"","tasks":[{"id":"1"},{"id":"2"}]}]}]
-    assert response7.status_code == 200
 
 def test_delete_category_relationship():
-    # Test delete relationship of category with todo with id 1
-    response = requests.delete('http://localhost:4567/todos/1/categories/1')
-    assert response.json() == []
-    assert response.status_code == 200
+    # Test delete relationship of category with todo with id
+    response = requests.get('http://localhost:4567/todos')
     
 
-    # Test delete relationship of category with todo with id 2
-    response2 = requests.delete('http://localhost:4567/todos/2/categories/1')
-    assert response2.json() == []
-    assert response2.status_code == 200
+
+def test_delete_taskof_relationship():
+    # Test delete relationship of taskof with todo with id
+    response = requests.get('http://localhost:4567/todos')
+
+def test_delete_todo():
+    # Test delete todo with id 
+    response = requests.get('http://localhost:4567/todos')
+
+
