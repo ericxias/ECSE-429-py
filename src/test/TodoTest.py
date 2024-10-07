@@ -40,13 +40,15 @@ def test_get_categories_with_todos_id():
             # Get the id of the first category of the first todo and check that the categories of the first todo match the categories of the first category
             response1 = requests.get('http://localhost:4567/todos/' + str(todo_id) + '/categories')
             category_data = {"categories": []}
+            response2 = requests.get('http://localhost:4567/todos/' + str(todo_id))
             
             # Check if the categories of the first todo match the category data retrieved
-            for category in todos["todos"][0]["categories"]:
-                response2 = requests.get('http://localhost:4567/categories/' + category["id"])
-                category_data["categories"].append(response2.json()["categories"][0])
-
-            response3 = requests.get('http://localhost:4567/todos/'+ todo_id + '/categories')
+            for category in response2.json()["todos"][0]["categories"]:
+                response3 = requests.get('http://localhost:4567/categories/' + category["id"])
+                if response3.status_code == 200 and response3.json()["categories"] != []:
+                    category_data["categories"].append(response3.json()["categories"][0])
+            
+            # Check if the tasksof of the first todo match the tasksof data retrieved        
             assert response3.json() == category_data
             assert response1.status_code == 200
 
@@ -78,15 +80,16 @@ def test_get_tasksof_with_todos_id():
             # Get the id of the first tasksof of the first todo and check that the tasksof of the first todo match the tasksof of the first tasksof
             response1 = requests.get('http://localhost:4567/todos/' + str(todo_id) + '/tasksof')
             tasksof_data = {"projects": []}
+            response2 = requests.get('http://localhost:4567/todos/' + str(todo_id))
 
             # for each tasksof of the first todo, get the tasksof data and add it to the tasksof_data dictionary
-            for tasksof in todos["todos"][0]["tasksof"]:
-                response2 = requests.get('http://localhost:4567/tasksof/' + tasksof["id"])
-                tasksof_data["projects"].append(response2.json()["projects"][0])
+            for tasksof in response2.json()["todos"][0]["tasksof"]:
+                response3 = requests.get('http://localhost:4567/projects/' + tasksof["id"])
+                if response3.status_code == 200 and response3.json()["projects"] != []:
+                    tasksof_data["projects"].append(response3.json()["projects"][0])
 
             # Check if the tasksof of the first todo match the tasksof data retrieved        
-            response3 = requests.get('http://localhost:4567/todos/'+ todo_id + '/tasksof')
-            assert response3.json() == tasksof_data
+            assert response1.json() == tasksof_data
             assert response1.status_code == 200
 
         else:
@@ -338,6 +341,5 @@ def test_delete_todo():
         assert response3.status_code == 404
 
 
-# Run the tests
 if __name__ == '__main__':
     pytest.main()
