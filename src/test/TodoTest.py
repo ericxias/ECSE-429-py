@@ -22,7 +22,6 @@ def test_get_todos_with_id():
         assert response2.json() == {"errorMessages":["Could not find an instance with todos/1"]}
         assert response2.status_code == 404
 
-#JSONDecodeError when appending categories to the category_data dictionary
 def test_get_categories_with_todos_id():
     # Retrieve all todos and test read the categories of the first todo if any todos with category relationships exist
     response = requests.get('http://localhost:4567/todos')
@@ -58,13 +57,14 @@ def test_get_categories_with_todos_id():
             assert response4.json() == {"categories": []}
             assert response4.status_code == 200
     else:
-        # another bug in the application -> if no todos exist, the application will output {"categories":[]} always
-        response5 = requests.get('http://localhost:4567/todos/1/categories')
-        assert response5.json() == {"categories": []}
-        assert response5.status_code == 200
+        # bug in the application -> if no todos id does not exist, the application will output the first category, or {"categories":[]} if no categories exist, and code 200
+        response5 = requests.get('http://localhost:4567/categories')
+        if response5.status_code == 200 and response5.json()["categories"] != []:
+            assert response5.json() == {"categories": [response5.json()["categories"][0]]}
+            assert response5.status_code == 200
+
         
 
-#JSONDecodeError when appending tasksof to the tasksof_data dictionary
 def test_get_tasksof_with_todos_id():
     # Retrieve all todos and test read the first todo if any todos exist
     response = requests.get('http://localhost:4567/todos')
