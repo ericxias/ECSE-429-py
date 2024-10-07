@@ -22,7 +22,7 @@ def test_get_todos_with_id():
         assert response2.json() == {"errorMessages":["Could not find an instance with todos/1"]}
         assert response2.status_code == 404
 
-
+#JSONDecodeError when appending categories to the category_data dictionary
 def test_get_categories_with_todos_id():
     # Retrieve all todos and test read the categories of the first todo if any todos with category relationships exist
     response = requests.get('http://localhost:4567/todos')
@@ -62,7 +62,7 @@ def test_get_categories_with_todos_id():
         assert response5.status_code == 200
         
 
-
+#JSONDecodeError when appending tasksof to the tasksof_data dictionary
 def test_get_tasksof_with_todos_id():
     # Retrieve all todos and test read the first todo if any todos exist
     response = requests.get('http://localhost:4567/todos')
@@ -80,8 +80,8 @@ def test_get_tasksof_with_todos_id():
             tasksof_data = {"projects": []}
 
             # for each tasksof of the first todo, get the tasksof data and add it to the tasksof_data dictionary
-            for project in todos["todos"][0]["tasksof"]:
-                response2 = requests.get('http://localhost:4567/tasksof/' + project["id"])
+            for tasksof in todos["todos"][0]["tasksof"]:
+                response2 = requests.get('http://localhost:4567/tasksof/' + tasksof["id"])
                 tasksof_data["projects"].append(response2.json()["projects"][0])
 
             # Check if the tasksof of the first todo match the tasksof data retrieved        
@@ -240,7 +240,7 @@ def test_creating_taskof_relationship():
             response5 = requests.post('http://localhost:4567/todos/' + str(todo_id) + '/tasksof', json={"id": 1})
             assert response5.json() == {"errorMessages":["Could not find thing matching value for id"]}
             assert response5.status_code == 404
-            
+
     else:
         # if the todo id does not exist, error message
         response6 = requests.post('http://localhost:4567/todos/1/tasksof', json={"id": 1})
@@ -251,16 +251,92 @@ def test_creating_taskof_relationship():
 def test_delete_category_relationship():
     # Test delete relationship of category with todo with id
     response = requests.get('http://localhost:4567/todos')
+    response2 = requests.get('http://localhost:4567/categories')
+    todos = response.json()
+
+    # Check if any todos exist
+    if response.status_code == 200 and isinstance(todos, dict) and len(todos) > 0:
+        # Get the id of the first todo
+        todo_id = todos["todos"][0]["id"]
+        
+        # Check if the first todo has any categories
+        if "categories" in todos["todos"][0] and todos["todos"][0]["categories"] != []:
+            # Get the id of the first category of the first todo and delete the relationship
+            category_id = todos["todos"][0]["categories"][0]["id"]
+            response1 = requests.delete('http://localhost:4567/todos/' + str(todo_id) + '/categories/' + str(category_id))
+            assert response1.status_code == 200
+            
+            # Check if the category relationship is deleted
+            # If no more categories exist, then "categories" is not a field in the todo
+            response2 = requests.get('http://localhost:4567/todos/' + str(todo_id))
+            if "categories" in response2.json()["todos"][0]:
+                if response2.json()["todos"][0]["categories"] != []:
+                    assert {"id": category_id} not in response2.json()["todos"][0]["categories"]
+
+    else:
+        # If input is invalid, test the error message when attempting to delete category relationship
+        response3 = requests.delete('http://localhost:4567/todos/' + str(todo_id) + '/categories/1')
+        assert response3.json() == {"errorMessages":["Could not find any instances with todos/" + str(todo_id) + "/categories/1"]}
+        assert response3.status_code == 404
     
 
 
 def test_delete_taskof_relationship():
     # Test delete relationship of taskof with todo with id
     response = requests.get('http://localhost:4567/todos')
+    response2 = requests.get('http://localhost:4567/projects')
+    todos = response.json()
+
+    # Check if any todos exist
+    if response.status_code == 200 and isinstance(todos, dict) and len(todos) > 0:
+        # Get the id of the first todo
+        todo_id = todos["todos"][0]["id"]
+
+        # Check if the first todo has any tasksof relationships
+        if "tasksof" in todos["todos"][0] and todos["todos"][0]["tasksof"] != []:
+            # Get the id of the first tasksof of the first todo and delete the relationship
+            project_id = todos["todos"][0]["tasksof"][0]["id"]
+            response1 = requests.delete('http://localhost:4567/todos/' + str(todo_id) + '/tasksof/' + str(project_id))
+            assert response1.status_code == 200
+
+            # Check if the tasksof relationship is deleted
+            # If no more tasksof relationships exist, then "tasksof" is not a field in the todo
+            response2 = requests.get('http://localhost:4567/todos/' + str(todo_id))
+            if "tasksof" in response2.json()["todos"][0]: 
+                if response2.json()["todos"][0]["tasksof"] != []:
+                    assert {"id": project_id} not in response2.json()["todos"][0]["tasksof"]
+            
+    
+    else:
+        # If input is invalid, test the error message when attempting to delete taskof relationship
+        response3 = requests.delete('http://localhost:4567/todos/' + str(todo_id) + '/tasksof/1')
+        assert response3.json() == {"errorMessages":["Could not find any instances with todos/" + str(todo_id) + "/tasksof/1"]}
+        assert response3.status_code == 404
+
 
 def test_delete_todo():
     # Test delete todo with id 
     response = requests.get('http://localhost:4567/todos')
+    todos = response.json()
+
+     # Check if any todos exist
+    if response.status_code == 200 and isinstance(todos, dict) and len(todos) > 0:
+        # Get the id of the first todo and delete
+        todo_id = todos["todos"][0]["id"]
+        response1 = requests.delete('http://localhost:4567/todos/' + str(todo_id))
+        assert response1.status_code == 200
+
+        # Check if the todo is deleted
+        response2 = requests.get('http://localhost:4567/todos/' + str(todo_id))
+        assert response2.json() == {"errorMessages":["Could not find an instance with todos/" + str(todo_id)]}
+        assert response2.status_code == 404
+    
+    else:
+        # Test the error message when attempting to delete todo with an id that does not exist
+        response3 = requests.delete('http://localhost:4567/todos/1')
+        assert response3.json() == {"errorMessages":["Could not find an instance with todos/1"]}
+        assert response3.status_code == 404
+
 
 # Run the tests
 if __name__ == '__main__':
