@@ -1,6 +1,5 @@
 import pytest
 import requests
-import json
 
 def test_get_todos_with_id():
     # Retrieve all todos and test read the first todo if any todos exist
@@ -11,7 +10,6 @@ def test_get_todos_with_id():
     if response.status_code == 200 and isinstance(todos, dict) and len(todos) > 0:
         # Get the id of the first todo
         todo_id = todos["todos"][0]["id"]
-        print(todo_id)
         response1 = requests.get('http://localhost:4567/todos/' + str(todo_id))
         assert response1.json() == {'todos': [todos["todos"][0]]}
         assert response1.status_code == 200
@@ -57,14 +55,13 @@ def test_get_categories_with_todos_id():
             assert response4.json() == {"categories": []}
             assert response4.status_code == 200
     else:
-        # bug in the application -> if no todos id does not exist, the application will output the first category, or {"categories":[]} if no categories exist, and code 200
+        # bug in the application -> if todo id is invalid, the application will output the first category, or {"categories":[]} if no categories exist, and code 200
         response5 = requests.get('http://localhost:4567/categories')
         if response5.status_code == 200 and response5.json()["categories"] != []:
             assert response5.json() == {"categories": [response5.json()["categories"][0]]}
             assert response5.status_code == 200
 
-        
-
+    
 def test_get_tasksof_with_todos_id():
     # Retrieve all todos and test read the first todo if any todos exist
     response = requests.get('http://localhost:4567/todos')
@@ -147,7 +144,7 @@ def test_update_todo_with_post():
         assert response1.status_code == 200
 
     else:
-        # If there is no todo, test the error message when attempting to update todo with id 1
+        # If there is no todo, or todo id is invalid, test the error message when attempting to update todo with id 1
         response2 = requests.post('http://localhost:4567/todos/1', json={"title":"test","doneStatus": True,"description":""})
         assert response2.json() == {"errorMessages":["No such todo entity instance with GUID or ID 1 found"]}
         assert response2.status_code == 404
@@ -254,7 +251,6 @@ def test_creating_taskof_relationship():
 def test_delete_category_relationship():
     # Test delete relationship of category with todo with id
     response = requests.get('http://localhost:4567/todos')
-    response2 = requests.get('http://localhost:4567/categories')
     todos = response.json()
 
     # Check if any todos exist
@@ -287,7 +283,6 @@ def test_delete_category_relationship():
 def test_delete_taskof_relationship():
     # Test delete relationship of taskof with todo with id
     response = requests.get('http://localhost:4567/todos')
-    response2 = requests.get('http://localhost:4567/projects')
     todos = response.json()
 
     # Check if any todos exist
