@@ -61,8 +61,7 @@ def test_get_categories_with_todos_id():
             assert response5.json() == {"categories": [response5.json()["categories"][0]]}
             assert response5.status_code == 200
 
-        
-
+    
 def test_get_tasksof_with_todos_id():
     # Retrieve all todos and test read the first todo if any todos exist
     response = requests.get('http://localhost:4567/todos')
