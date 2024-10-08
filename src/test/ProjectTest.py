@@ -26,23 +26,58 @@ def test_get_projects_with_id():
         assert response2.json() == {"errorMessages":["Could not find an instance with projects/1"]}
         response2.status_code == 404
 
-# def test_get_tasks_with_project_id():
-#     # Get all projects.
-#     response = requests.get('http://localhost:4567/projects')
-#     projects = response.json()
+def test_get_tasks_with_project_id():
+    # Get all projects.
+    response = requests.get('http://localhost:4567/projects')
+    projects = response.json()
 
-#     # Check if any projects exist.
-#     if response.status_code == 200 and isinstance(projects, dict) and len(projects) > 0:
-#         project_id = projects["projects"][0]["id"]
+    # Check if any projects exist.
+    if response.status_code == 200 and isinstance(projects, dict) and len(projects) > 0:
+        project_id = projects["projects"][0]["id"]
 
-#         # Check if projects have todos.
-#         if "todos" in projects["projects"][0] and projects["projects"][0]["todos"] != []:
-#             # Get the tasks of the particular project.
-#             response1 = requests.get('http://localhost:4567/projects/' + str(project_id) + '/tasks')
-#             task_data = {"todos": []}
+        # Check if projects have todos.
+        if "tasks" in response.json()["projects"][0] and projects["projects"][0]["tasks"] != []:
+            print("4")
+            task_data = {"todos": []}
+            # Get tasks of the first project.
+            response1 = requests.get('http://localhost:4567/projects/' + str(project_id) + '/tasks')
+            response2 = requests.get('http://localhost:4567/projects/' + str(project_id))
 
-#             for task in projects["projects"][0]["todos"]:
-#                 response2 = requests.get('http:localhost:4567/todos' + task["id"])
+            # Get each task from the project, and check if the task data matches.
+            for task in response2.json()["projects"][0]["tasks"]:
+                response3 = requests.get('http://localhost:4567/todos/' + task["id"])
+                if response3.status_code == 200 and response3.json()["todos"] != []:
+                    task_data["todos"].append(response3.json()["todos"][0])
+            
+            assert response1.json() == task_data
+            assert response1.status_code == 200
+            
+        else:
+            response4 = requests.get('http://localhost:4567/projects/' + str(project_id) + '/tasks')
+            assert response4.json() == {"todos":[]}
+            assert response4.status_code == 200
+    else:
+        response1 = requests.get('http://localhost:4567/projects/1/tasks')
+        assert response1.status_code == 404
+
+def test_post_update_categories():
+    # Get all projects.
+    response = requests.get('http://localhost:4567/projects')
+    projects = response.json()
+
+    if response.status_code == 200 and isinstance(projects, dict) and len(projects) > 0:
+        project_id = projects["projects"][0]["id"]
+        response1 = requests.post('http://localhost:4567/projects/' + str(project_id) + '/categories', json={"id":"1"})
+        assert response1.status_code == 201
+        
+        response2 = requests.get('http://localhost:4567/projects/' + str(project_id) + '/categories')
+        response3 = requests.get('http://localhost:4567/categories/1')
+        assert response2.json() == response3.json()
+    
+    else:
+        response4 = requests.post('http://localhost:4567/projects/' + str(project_id) + '/categories', json={"id":"1"})
+        assert response4.json() == {"errorMessages":["Could not find parent thing for relationship projects/1/categories"]}
+        assert response4.status_code == 404
 
 def test_post_create_project():
     # Test creation.
