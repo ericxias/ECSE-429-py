@@ -14,13 +14,13 @@ def test_get_projects_with_id():
     projects = response.json()
 
     # Check if any projects exist.
-    if response.status_code == 200 and isinstance(projects, dict) and len(projects) > 0:
+    if response.status_code == 200 and response.json()["projects"] != []:
         project_id = projects["projects"][0]["id"]
         print(project_id)
         response1 = requests.get('http://localhost:4567/projects/' + str(project_id))
         assert response1.json() == {'projects': [projects["projects"][0]]}
         assert response1.status_code == 200
-    ## If not found, test error response.
+    # If not found, test error response.
     else:
         response2 = requests.get('http://localhost:4567/projects/1')
         assert response2.json() == {"errorMessages":["Could not find an instance with projects/1"]}
@@ -32,7 +32,7 @@ def test_get_categories_with_project_id():
     projects = response.json()
 
     # Check if any projects exist.
-    if response.status_code == 200 and isinstance(projects, dict) and len(projects) > 0:
+    if response.status_code == 200 and response.json()["projects"] != []:
         # Get the project ID.
         project_id = projects["projects"][0]["id"]
 
@@ -70,7 +70,7 @@ def test_get_tasks_with_project_id():
     projects = response.json()
 
     # Check if any projects exist.
-    if response.status_code == 200 and isinstance(projects, dict) and len(projects) > 0:
+    if response.status_code == 200 and response.json()["projects"] != []:
         # Get the project ID.
         project_id = projects["projects"][0]["id"]
 
@@ -91,47 +91,14 @@ def test_get_tasks_with_project_id():
             assert response1.status_code == 200
             
         else:
+            # Project has no todos.
             response4 = requests.get('http://localhost:4567/projects/' + str(project_id) + '/tasks')
             assert response4.json() == {"todos":[]}
             assert response4.status_code == 200
     else:
+        # Projects do not exist.
         response1 = requests.get('http://localhost:4567/projects/1/tasks')
         assert response1.status_code == 404
-
-def test_post_update_categories():
-    # Get all projects and categories.
-    response = requests.get('http://localhost:4567/projects')
-    projects = response.json()
-    response2 = requests.get('http://localhost:4567/categories')
-    categories = response2.json()
-
-    # Check for project existence.
-    if response.status_code == 200 and isinstance(projects, dict) and len(projects) > 0:
-        # Get first project ID.
-        project_id = projects["projects"][0]["id"]
-
-        # Check for category existence.
-        if response2.status_code == 200 and isinstance(categories, dict) and len(categories) > 0:
-            # Get first category ID.
-            category_id = categories["categories"][0]["id"]
-            # Create relationship between project and category.
-            response1 = requests.post('http://localhost:4567/projects/' + str(project_id) + '/categories', json={"id": category_id})
-            assert response1.status_code == 201
-
-            # Verify creation of the relationship.
-            response5 = requests.get('http://localhost:4567/projects/' + str(project_id))
-            assert{"id": category_id} in response5.json()["projects"][0]["categories"]
-        else:
-            # Category does not exist.
-            response6 = requests.post('http://localhost:4567/projects/' + str(project_id) + '/categories', json={"id": category_id})
-            assert response6.json() == {"errorMessages":["Could not find thing matching value for id"]}
-            assert response6.status_code == 404
-    
-    else:
-        # Project does not exist.
-        response3 = requests.post('http://localhost:4567/projects/' + str(project_id) + '/categories', json={"id":"1"})
-        assert response3.json() == {"errorMessages":["Could not find parent thing for relationship projects/1/categories"]}
-        assert response3.status_code == 404
 
 def test_post_create_project():
     # Test creation.
@@ -161,7 +128,8 @@ def test_post_update_project():
     response = requests.get('http://localhost:4567/projects')
     projects = response.json()
 
-    if response.status_code == 200 and isinstance(projects, dict) and len(projects) > 0:
+    if response.status_code == 200 and response.json()["projects"] != []:
+        # Get project ID.
         project_id = projects["projects"][0]["id"]
         response1 = requests.post('http://localhost:4567/projects/' + str(project_id), json={"title":"test2","completed": False, "active": False, "description":"test2 description"})
         assert response1.status_code == 200
@@ -170,8 +138,44 @@ def test_post_update_project():
         assert response1.json() == response2.json()["projects"][0]
     
     else:
-        response3 = requests.post('http://localhost:4567/projects/' + str(project_id), json={"title":"test2","completed": False, "active": False, "description":"test2 description"})
+        # Update a project with invalid ID.
+        response3 = requests.post('http://localhost:4567/projects/1', json={"title":"test2","completed": False, "active": False, "description":"test2 description"})
         assert response3.json() == {"errorMessages":["No such project entity instance with GUID or ID 1 found"]}
+        assert response3.status_code == 404
+
+def test_post_update_categories():
+    # Get all projects and categories.
+    response = requests.get('http://localhost:4567/projects')
+    projects = response.json()
+    response2 = requests.get('http://localhost:4567/categories')
+    categories = response2.json()
+
+    # Check for project existence.
+    if response.status_code == 200 and response.json()["projects"] != []:
+        # Get first project ID.
+        project_id = projects["projects"][0]["id"]
+
+        # Check for category existence.
+        if response2.status_code == 200 and response2.json()["categories"] != []:
+            # Get first category ID.
+            category_id = categories["categories"][0]["id"]
+            # Create relationship between project and category.
+            response1 = requests.post('http://localhost:4567/projects/' + str(project_id) + '/categories', json={"id": category_id})
+            assert response1.status_code == 201
+
+            # Verify creation of the relationship.
+            response5 = requests.get('http://localhost:4567/projects/' + str(project_id))
+            assert{"id": category_id} in response5.json()["projects"][0]["categories"]
+        else:
+            # Category does not exist.
+            response6 = requests.post('http://localhost:4567/projects/' + str(project_id) + '/categories', json={"id": category_id})
+            assert response6.json() == {"errorMessages":["Could not find thing matching value for id"]}
+            assert response6.status_code == 404
+    
+    else:
+        # Project does not exist.
+        response3 = requests.post('http://localhost:4567/projects/1/categories', json={"id":"1"})
+        assert response3.json() == {"errorMessages":["Could not find parent thing for relationship projects/1/categories"]}
         assert response3.status_code == 404
     
 def test_put_update_project():
@@ -179,7 +183,8 @@ def test_put_update_project():
     response = requests.get('http://localhost:4567/projects')
     projects = response.json()
 
-    if response.status_code == 200 and isinstance(projects, dict) and len(projects) > 0:
+    if response.status_code == 200 and response.json()["projects"] != []:
+        # Get project ID.
         project_id = projects["projects"][0]["id"]
         response1 = requests.put('http://localhost:4567/projects/' + str(project_id), json={"title":"test2","completed": False, "active": False, "description":"test2 description"})
         assert response1.status_code == 200
@@ -188,6 +193,7 @@ def test_put_update_project():
         assert response1.json() == response2.json()["projects"][0]
     
     else:
+        # Update project with invalid ID.
         response3 = requests.put('http://localhost:4567/projects/1', json={"title":"test2","completed": False, "active": False, "description":"test2 description"})
         assert response3.json() == {"errorMessages":["Invalid GUID for 1 entity todo"]}
         assert response3.status_code == 404
@@ -197,7 +203,7 @@ def test_post_task_relationship_to_project():
     response = requests.get('http://localhost:4567/projects')
     projects = response.json()
 
-    if response.status_code == 200 and isinstance(projects, dict) and len(projects) > 0:
+    if response.status_code == 200 and response.json()["projects"] != []:
         # Get first project ID.
         project_id = projects["projects"][0]["id"]
 
@@ -211,7 +217,7 @@ def test_post_task_relationship_to_project():
         assert {"id": project_id} in response2.json()["todos"][0]["tasksof"] == response3.json()["tasksof"]
     else:
         # Project does not exist.
-        response4 = requests.post('http://localhost:4567/projects/' + str(project_id) + '/tasks', json={"title":"task1","doneStatus": False, "description":"do this task"})
+        response4 = requests.post('http://localhost:4567/projects/1/tasks', json={"title":"task1","doneStatus": False, "description":"do this task"})
         assert response4.json() == {"errorMessages":["Could not find parent thing for relationship projects/1/tasks"]}
         assert response4.status_code == 404
 
@@ -223,7 +229,7 @@ def test_delete_project_category_relationship():
     categories = response2.json()
 
     # Check for project existence.
-    if response.status_code == 200 and isinstance(projects, dict) and len(projects) > 0:
+    if response.status_code == 200 and response.json()["projects"] != []:
         # Get first project ID.
         project_id = projects["projects"][0]["id"]
 
@@ -240,7 +246,7 @@ def test_delete_project_category_relationship():
                     assert {"id": category_id} not in response4.json()["projects"][0]["categories"]
     else:
         # Invalid input.
-        response3 = requests.delete('http://localhost:4567/projects/' + str(project_id) + '/categories/' + str(category_id))
+        response3 = requests.delete('http://localhost:4567/projects/1/categories/1')
         assert response3.status_code == 404
 
 def test_delete_project_task_relationship():
@@ -250,7 +256,7 @@ def test_delete_project_task_relationship():
     response2 = requests.get('http://localhost:4567/todos')
     todos = response2.json()
 
-    if response.status_code == 200 and isinstance(projects, dict) and len(projects) > 0:
+    if response.status_code == 200 and response.json()["projects"] != []:
         # Get first project ID.
         project_id = projects["projects"][0]["id"]
 
@@ -267,8 +273,8 @@ def test_delete_project_task_relationship():
                     assert {"id": project_id} not in response4.json()["todos"][0]["tasksof"]
     else:
         # Invalid input.
-        response3 = requests.delete('http://localhost:4567/projects/' + str(project_id) + '/tasks/' + str(task_id))
-        assert response3.json() == {"errorMessages":["Could not find any instances with projects/" + str(project_id) + "/tasks/1"]}
+        response3 = requests.delete('http://localhost:4567/projects/1/tasks/1')
+        assert response3.json() == {"errorMessages":["Could not find any instances with projects/1/tasks/1"]}
         assert response3.status_code == 404
 
 def test_delete_project():
@@ -277,7 +283,7 @@ def test_delete_project():
     projects = response.json()
 
      # Check if any projects exist.
-    if response.status_code == 200 and isinstance(projects, dict) and len(projects) > 0:
+    if response.status_code == 200 and response.json()["projects"] != []:
         project_id = projects["projects"][0]["id"]
         response2 = requests.delete('http://localhost:4567/projects/' + str(project_id))
         assert response2.status_code == 200
