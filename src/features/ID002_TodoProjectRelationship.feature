@@ -4,14 +4,7 @@ Feature: Create a Todo and Project Relationship
     So I can track what project my task belongs to
     
     Background:
-        Given the following projects exist in the system:
-            | id | title | completed | active | description |
-            | 1 | Office Work | false | false | Work related tasks |
-            | 2 | Home Work| false | true | Personal tasks |
-        Given the following Todo tasks exist in the system:
-            | id | title | doneStatus | description |
-            | 1 | scan paperwork | false | scan all the paperwork |
-            | 2 | file paperwork | false | file all the paperwork | 
+        Given the application is running
     
     Scenario Outline: User creates a relationship between Todo and Project (Normal Flow)
         When the user creates a relationship between Todo with id "<id>" and Project with id "<pid>"

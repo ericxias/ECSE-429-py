@@ -4,10 +4,7 @@ Feature: Delete a Todo or Relationship
     So I can remove tasks that are no longer needed
 
     Background:
-        Given the following Todo tasks exist in the system:
-            | id | title | doneStatus | description | categories | tasksof |
-            | 1 | scan paperwork | false | scan all the paperwork | [id = 1] | [id = 1] |
-            | 2 | file paperwork | false | file all the paperwork | [id = 1] | [id = 2] |
+        Given the application is running
     
     Scenario Outline: User deletes a Todo task (Normal Flow)
         When the user deletes a Todo task with id "<id>"

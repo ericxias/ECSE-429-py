@@ -4,10 +4,7 @@ Feature: Create a Todo Task Instance
     So I can organize the tasks I need to complete
 
     Background:
-        Given the following Todo tasks exist in the system:
-            | id | title | doneStatus | description |
-            | 1 | scan paperwork | false | scan all the paperwork |
-            | 2 | file paperwork | false | file all the paperwork |
+        Given the application is running|
     
     Scenario Outline: User creates a Todo task with (Normal Flow)
         When the user creates a Todo task with title "shred paperwork" and doneStatus "False" and description "shred all the paperwork"
