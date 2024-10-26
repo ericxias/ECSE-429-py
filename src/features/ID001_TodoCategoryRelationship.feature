@@ -16,4 +16,4 @@ Feature: Create a Todo and Category Relationship
     Scenario: Project does not exist (Error Flow)
         Given a Category does not exist
         When the user creates a relationship between the Todo and the Category
-        Then the system should return an error message "Could not find thing matching value for id"
+        Then the system should return an error message "Could not find thing matching value for id" and status code "404"
