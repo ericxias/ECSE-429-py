@@ -6,7 +6,7 @@ from behave import *
 # to run -> behave -i <feature file name> 
 # to run all -> behave
 
-# ID001_TodoCapabilityRelationship.feature
+# ID001_TodoCategoryRelationship.feature
 
 @given('a Todo task with title "{title}" and doneStatus "{doneStatus}" and a Category with title "{cTitle}" exists in the system')
 def step_given_todo_and_category_exist(context, title, doneStatus, cTitle):
@@ -63,11 +63,11 @@ def step_then_verify_error_message(context, error_message):
     assert response.json()['errorMessages'][0] == error_message
 
 
-# ID002_TodoCapabilityRelationship.feature
+# ID002_TodoProjectRelationship.feature
 
-# ID003_TodoCapabilityRelationship.feature
+# ID003_CreateTodo.feature
 
-# ID004_TodoCapabilityRelationship.feature
+# ID004_UpdateTodo.feature
 
-# ID005_TodoCapabilityRelationship.feature
+# ID005_DeleteTodo.feature
 
