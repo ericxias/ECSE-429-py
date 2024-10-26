@@ -13,7 +13,7 @@ Feature: Create a Todo and Category Relationship
         When the user creates a relationship between the Todo and the Category
         Then the relationship between Todo and Category is created successfully
 
-    Scenario: Todo does not exist (Error Flow)
+    Scenario: Project does not exist (Error Flow)
         Given a Category does not exist
         When the user creates a relationship between the Todo and the Category
         Then the system should return an error message "Could not find thing matching value for id"

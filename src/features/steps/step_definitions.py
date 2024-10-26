@@ -59,11 +59,58 @@ def step_then_verify_relationship_created(context):
 def step_then_verify_error_message(context, error_message):
     response = context.response
     assert response.status_code == 404
-    print(response.json()['errorMessages'][0])
     assert response.json()['errorMessages'][0] == error_message
 
 
 # ID002_TodoProjectRelationship.feature
+
+@given('a Todo task with title "{title}" and doneStatus "{doneStatus}" and a project with title "{ptitle}", completed "{completed}", and active "{active}" exists in the system')
+def step_given_todo_and_project_exist(context, title, doneStatus, ptitle, completed, active):
+    done_status_bool = doneStatus.lower() == 'true'
+    completed_bool = completed.lower() == 'true'
+    active_bool = active.lower() == 'true'
+    todo_response = requests.post(f'http://localhost:4567/todos', json={"title": title, "doneStatus": done_status_bool})
+    project_response = requests.post(f'http://localhost:4567/projects', json={"title": ptitle, "completed": completed_bool, "active": active_bool})
+    assert todo_response.status_code == 201
+    assert project_response.status_code == 201
+    context.todo_id = todo_response.json()['id']
+    context.project_id = project_response.json()['id']
+
+@given('a relationship between a Todo task with title "{title}" and doneStatus "{doneStatus}" and a project with title "{ptitle}", completed "{completed}", and active "{active}" already exists in the system')
+def step_given_relationship_exists(context, title, doneStatus, ptitle, completed, active):
+    done_status_bool = doneStatus.lower() == 'true'
+    completed_bool = completed.lower() == 'true'
+    active_bool = active.lower() == 'true'
+    todo_response = requests.post(f'http://localhost:4567/todos', json={"title": title, "doneStatus": done_status_bool})
+    project_response = requests.post(f'http://localhost:4567/projects', json={"title": ptitle, "completed": completed_bool, "active": active_bool})
+    relationship_response = requests.post(f'http://localhost:4567/todos/{todo_response.json()["id"]}/tasksof', json={"id": project_response.json()["id"]})
+    assert todo_response.status_code == 201
+    assert project_response.status_code == 201
+    assert relationship_response.status_code == 201
+    context.todo_id = todo_response.json()['id']
+    context.project_id = project_response.json()['id']
+
+@given('a project does not exist')
+def step_given_project_does_not_exist(context):
+    todo_response = requests.post(f'http://localhost:4567/todos', json={"title": "test", "doneStatus": False})
+    project_response = requests.post('http://localhost:4567/projects', json={"title": "test"})
+    assert todo_response.status_code == 201
+    assert project_response.status_code == 201
+    context.todo_id = todo_response.json()['id']
+    context.project_id = project_response.json()['id']
+    response = requests.delete(f'http://localhost:4567/projects/{context.project_id}')
+    assert response.status_code == 200
+
+@when('the user creates a relationship between the Todo and the Project')
+def step_impl(context):
+    body = {"id": context.project_id}
+    response = requests.post(f'http://localhost:4567/todos/{context.todo_id}/tasksof', json=body)
+    context.response = response
+
+@then('the relationship between Todo and Project is created successfully')
+def step_then_verify_relationship_created(context):
+    response = context.response
+    assert response.status_code == 201
 
 # ID003_CreateTodo.feature
 
