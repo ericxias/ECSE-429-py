@@ -10,6 +10,7 @@ from behave import *
 
 @given('a Todo task with title "{title}" and doneStatus "{doneStatus}" and a Category with title "{cTitle}" exists in the system')
 def step_impl(context, title, doneStatus, cTitle):
+    # Create a Todo task and a Category, store the ids in the context
     done_status_bool = process_bool(doneStatus)
     todo_body = {
         "title": title,
@@ -20,12 +21,11 @@ def step_impl(context, title, doneStatus, cTitle):
     assert todo_response.status_code == 201
     assert category_response.status_code == 201
     context.todo_id = todo_response.json()['id']
-    print(context.todo_id)
     context.category_id = category_response.json()['id']
-    print(context.category_id)
 
 @given('a relationship between a Todo task with title "{title}" and doneStatus "{doneStatus}" and a Category with title "{cTitle}" already exists in the system')
 def step_impl(context, title, doneStatus, cTitle):
+    # Create a Todo task and a Category, create a relationship between them, store the ids in the context
     done_status_bool = process_bool(doneStatus)
     todo_body = {
         "title": title,
@@ -42,6 +42,8 @@ def step_impl(context, title, doneStatus, cTitle):
 
 @given('a Category does not exist')
 def step_impl(context):
+    # Create a Todo task and a Category, delete the Category, store the ids in the context
+    # This ensures a valid Todo task exists, but a Category with the id does not
     todo_response = requests.post(f'http://localhost:4567/todos', json={"title": "test"})
     category_response = requests.post('http://localhost:4567/categories', json={"title": "test"})
     assert todo_response.status_code == 201
@@ -53,6 +55,7 @@ def step_impl(context):
 
 @when('the user creates a relationship between the Todo and the Category')
 def step_impl(context):
+    # Run the POST request to create the relationship
     response = requests.post(f'http://localhost:4567/todos/{context.todo_id}/categories', json={"id": context.category_id})
     context.response = response
 
@@ -63,11 +66,8 @@ def step_impl(context):
 
 @then('the system should return an error message "{error_message}" and status code "{status_code}"')
 def step_impl(context, error_message, status_code):
+    # Generic, used for multiple features
     response = context.response
-    # print(response.status_code)
-    # print(status_code)
-    # print(response.json())
-    # print(error_message)
     assert response.status_code == int(status_code)
     assert response.json()['errorMessages'][0] == error_message
 
@@ -76,6 +76,7 @@ def step_impl(context, error_message, status_code):
 
 @given('a Todo task with title "{title}" and doneStatus "{doneStatus}" and a project with title "{ptitle}", completed "{completed}", and active "{active}" exists in the system')
 def step_impl(context, title, doneStatus, ptitle, completed, active):
+    # Create a Todo task and a Project, store the ids in the context
     done_status_bool = process_bool(doneStatus)
     completed_bool = process_bool(completed)
     active_bool = process_bool(active)
@@ -97,6 +98,7 @@ def step_impl(context, title, doneStatus, ptitle, completed, active):
 
 @given('a relationship between a Todo task with title "{title}" and doneStatus "{doneStatus}" and a project with title "{ptitle}", completed "{completed}", and active "{active}" already exists in the system')
 def step_impl(context, title, doneStatus, ptitle, completed, active):
+    # Create a Todo task and a Project, create a relationship between them, store the ids in the context
     done_status_bool = process_bool(doneStatus)
     completed_bool = process_bool(completed)
     active_bool = process_bool(active)
@@ -120,6 +122,8 @@ def step_impl(context, title, doneStatus, ptitle, completed, active):
 
 @given('a Project does not exist')
 def step_impl(context):
+    # Create a Todo task and a Project, delete the Project, store the ids in the context
+    # This ensures a valid Todo task exists, but a Project with the id does not
     todo_response = requests.post(f'http://localhost:4567/todos', json={"title": "test"})
     project_response = requests.post('http://localhost:4567/projects', json={"title": "test"})
     assert todo_response.status_code == 201
@@ -131,10 +135,8 @@ def step_impl(context):
 
 @when('the user creates a relationship between the Todo and the Project')
 def step_impl(context):
-    body = {
-        "id": context.project_id
-        }
-    response = requests.post(f'http://localhost:4567/todos/{context.todo_id}/tasksof', json=body)
+    # Run the POST request to create the relationship
+    response = requests.post(f'http://localhost:4567/todos/{context.todo_id}/tasksof', json={"id": context.project_id})
     context.response = response
 
 @then('the relationship between Todo and Project is created successfully')
@@ -146,6 +148,7 @@ def step_impl(context):
 
 @when('the user creates a Todo task with title "{title}" and doneStatus "{doneStatus}" and description "{description}"')
 def step_impl(context, title, doneStatus, description):
+    # Run the POST request to create the Todo task with the given title, doneStatus, and description
     done_status_bool = process_bool(doneStatus)
     body = {
         "title": title, 
@@ -157,6 +160,7 @@ def step_impl(context, title, doneStatus, description):
 
 @when('the user creates a Todo task with title "{title}" and doneStatus "{doneStatus}"')
 def step_impl(context, title, doneStatus):
+    # Run the POST request to create the Todo task with the given title and doneStatus
     done_status_bool = process_bool(doneStatus)
     body = {
         "title": title, 
@@ -185,6 +189,8 @@ def step_impl(context, title, doneStatus):
 
 @given('a Todo task with title "{title}", doneStatus "{doneStatus}", and description "{description}" exists in the system')
 def step_impl(context, title, doneStatus, description):
+    # Create a Todo task with the given title, doneStatus, and description, store the id in the context
+    # This ensures a valid Todo task exists for us to update
     done_status_bool = process_bool(doneStatus)
     body = {
         "title": title,
@@ -197,6 +203,7 @@ def step_impl(context, title, doneStatus, description):
 
 @when('the user updates a Todo task with new title "{title}", doneStatus "{doneStatus}", and description "{description}"')
 def step_impl(context, title, doneStatus, description):
+    # Run the POST request to update the Todo task with the given title, doneStatus, and description
     done_status_bool = process_bool(doneStatus)
     body = {
         "title": title, 
@@ -208,11 +215,14 @@ def step_impl(context, title, doneStatus, description):
 
 @when('the user updates a Todo task with new title "{title}"')
 def step_impl(context, title):
+    # Run the POST request to update the Todo task with the given title
     response = requests.post(f'http://localhost:4567/todos/{context.todo_id}', json={"title": title})
     context.response = response
 
 @when('the user updates a Todo task with new doneStatus "{doneStatus}" and description "{description}"')
 def step_impl(context, doneStatus, description):
+    # Run the PUT request to update the Todo task with the given doneStatus and description
+    # This results in an error with PUT
     done_status_bool = process_bool(doneStatus)
     body = {
         "doneStatus": done_status_bool, 
@@ -233,6 +243,8 @@ def step_impl(context, title, doneStatus, description):
 
 @given('a Todo task does not exist')
 def step_impl(context):
+    # Create a Todo task, delete the Todo task, store the id in the context
+    # This a Todo task with the id does not exist
     response = requests.post('http://localhost:4567/todos', json={"title": "test"})
     assert response.status_code == 201
     context.todo_id = response.json()['id']
@@ -241,16 +253,19 @@ def step_impl(context):
 
 @when('the user deletes the Todo task')
 def step_impl(context):
+    # Run the DELETE request to delete the Todo task
     response = requests.delete(f'http://localhost:4567/todos/{context.todo_id}')
     context.response = response
 
 @when('the user deletes a relationship between the Todo and the Category')
 def step_impl(context):
+    # Run the DELETE request to delete the relationship between the Todo and the Category
     response = requests.delete(f'http://localhost:4567/todos/{context.todo_id}/categories/{context.category_id}')
     context.response = response
 
 @when('the user deletes a relationship between the Todo and the Project')
 def step_impl(context):
+    # Run the DELETE request to delete the relationship between the Todo and the Project
     response = requests.delete(f'http://localhost:4567/todos/{context.todo_id}/tasksof/{context.project_id}')
     context.response = response
 
@@ -261,6 +276,7 @@ def step_impl(context):
 
 @then('the relationship between the Todo and the Category is successfully deleted')
 def step_impl(context):
+    # Check if the relationship between the Todo and the Category is successfully deleted
     response = context.response
     assert response.status_code == 200
     get_response = requests.get('http://localhost:4567/todos/{context.todo_id}/categories')
@@ -270,6 +286,7 @@ def step_impl(context):
 
 @then('the relationship between the Todo and the Project is successfully deleted')
 def step_impl(context):
+    # Check if the relationship between the Todo and the Project is successfully deleted
     response = context.response
     assert response.status_code == 200
     get_response = requests.get('http://localhost:4567/todos/{context.todo_id}/tasksof')
@@ -279,10 +296,9 @@ def step_impl(context):
 
 @then('the system should return an error message with id "{error_message}" and status code "{status_code}"')
 def step_impl(context, error_message, status_code):
+    # Append the todo_id to the error message, check if the error message and status code match the expected values
     response = context.response
     error_message = error_message + context.todo_id
-    print(error_message)
-    print(response.json()['errorMessages'][0])
     assert response.json()['errorMessages'][0] == error_message
     assert response.status_code == int(status_code)
 
