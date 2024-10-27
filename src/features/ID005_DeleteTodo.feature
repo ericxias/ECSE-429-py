@@ -2,72 +2,24 @@ Feature: Delete a Todo or Relationship
     As a user of the rest api todo list manager application
     I want to delete a todo task or relationship
     So I can remove tasks that are no longer needed
-
-    Background:
-        Given the application is running
     
-    Scenario Outline: User deletes a Todo task (Normal Flow)
-        When the user deletes a Todo task with id "<id>"
-        And a Todo task with id "<id>" exists in the system
-        Then the Todo task with id "<id>" is deleted successfully
-        Examples:
-            | id |
-            | 1 |
-            | 2 |
-            | 3 |
-            | 4 |
-            | 10 |
+    Scenario: User deletes a Todo task (Normal Flow)
+        Given a Todo task with title "test", doneStatus "false", and description "test" exists in the system
+        When the user deletes the Todo task 
+        Then the Todo task is successfully deleted
 
-    Scenario Outline: User deletes a Todo Category relationship (Alternate Flow)
-        When the user deletes a relationship between Todo with id "<id>" and Category with id "<cid>"
-        And a Todo task with id "<id>" is associated with a category with id "<cid>"
-        Then the relationship between Todo with id "<id>" and Category with id "<cid>" is deleted successfully
-        Examples:
-            | id | cid |
-            | 1 | 1 |
-            | 1 | 2 |
-            | 1 | 3 |
-            | 2 | 1 |
-            | 2 | 2 |
-            | 2 | 3 |
-            | 3 | 1 |
-            | 3 | 2 |
-            | 3 | 3 |
-            | 4 | 1 |
-            | 4 | 2 |
-            | 4 | 3 |
-            | 4 | 4 |
-            | 10 | 10 |
+    Scenario: User deletes a Todo Category relationship (Alternate Flow)
+        Given a relationship between a Todo task with title "test" and doneStatus "False" and a Category with title "ctest" already exists in the system
+        When the user deletes a relationship between the Todo and the Category
+        Then the relationship between the Todo and the Category is successfully deleted
         
-    Scenario Outline: User deletes a Todo Project relationship (Alternate Flow)
-        When the user deletes a relationship between Todo with id "<id>" and Project with id "<pid>"
-        And a Todo task with id "<id>" is associated with a project with id "<pid>"
-        Then the relationship between Todo with id "<id>" and Project with id "<pid>" is deleted successfully
-        Examples:
-            | id | pid |
-            | 1 | 1 |
-            | 1 | 2 |
-            | 1 | 3 |
-            | 2 | 1 |
-            | 2 | 2 |
-            | 2 | 3 |
-            | 3 | 1 |
-            | 3 | 2 |
-            | 3 | 3 |
-            | 4 | 1 |
-            | 4 | 2 |
-            | 4 | 3 |
-            | 4 | 4 |
-            | 10 | 10 |
+    Scenario: User deletes a Todo Project relationship (Alternate Flow)
+        Given a relationship between a Todo task with title "test" and doneStatus "False" and a project with title "ptest", completed "False", and active "False" already exists in the system
+        When the user deletes a relationship between the Todo and the Project
+        Then the relationship between the Todo and the Project is successfully deleted
 
-    Scenario Outline: Todo task does not exist (Error Flow)
-        When the user deletes a Todo task with id "<id>"
-        And a Todo task with id "<id>" does not exist
-        Then the system should return an error message "Could not find an instance with todos/<id>"
-        Examples:
-            | id |
-            | 1 |
-            | 2 |
-            | 3 |
-            | 4 |
-            | 10 |
+    Scenario: Todo task does not exist (Error Flow)
+        Given a Todo task does not exist
+        When the user deletes the Todo task
+        # Add the id of the Todo task to the error message
+        Then the system should return an error message with id "Could not find any instances with todos/" and status code "404" 

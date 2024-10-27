@@ -15,7 +15,7 @@ def step_impl(context, title, doneStatus, cTitle):
         "title": title,
         "doneStatus": done_status_bool
     }
-    todo_response = requests.post(f'http://localhost:4567/todos', json={todo_body})
+    todo_response = requests.post(f'http://localhost:4567/todos', json=todo_body)
     category_response = requests.post(f'http://localhost:4567/categories', json={"title": cTitle})
     assert todo_response.status_code == 201
     assert category_response.status_code == 201
@@ -31,7 +31,7 @@ def step_impl(context, title, doneStatus, cTitle):
         "title": title,
         "doneStatus": done_status_bool
     }
-    todo_response = requests.post(f'http://localhost:4567/todos', json={todo_body})
+    todo_response = requests.post(f'http://localhost:4567/todos', json=todo_body)
     category_response = requests.post(f'http://localhost:4567/categories', json={"title": cTitle})
     relationship_response = requests.post(f'http://localhost:4567/todos/{todo_response.json()["id"]}/categories', json={"id": category_response.json()["id"]})
     assert todo_response.status_code == 201
@@ -88,8 +88,8 @@ def step_impl(context, title, doneStatus, ptitle, completed, active):
         "completed": completed_bool,
         "active": active_bool
     }
-    todo_response = requests.post(f'http://localhost:4567/todos', json={todo_body})
-    project_response = requests.post(f'http://localhost:4567/projects', json={project_body})
+    todo_response = requests.post(f'http://localhost:4567/todos', json=todo_body)
+    project_response = requests.post(f'http://localhost:4567/projects', json=project_body)
     assert todo_response.status_code == 201
     assert project_response.status_code == 201
     context.todo_id = todo_response.json()['id']
@@ -109,8 +109,8 @@ def step_impl(context, title, doneStatus, ptitle, completed, active):
         "completed": completed_bool,
         "active": active_bool
     }
-    todo_response = requests.post(f'http://localhost:4567/todos', json={todo_body})
-    project_response = requests.post(f'http://localhost:4567/projects', json={project_body})
+    todo_response = requests.post(f'http://localhost:4567/todos', json=todo_body)
+    project_response = requests.post(f'http://localhost:4567/projects', json=project_body)
     relationship_response = requests.post(f'http://localhost:4567/todos/{todo_response.json()["id"]}/tasksof', json={"id": project_response.json()["id"]})
     assert todo_response.status_code == 201
     assert project_response.status_code == 201
@@ -231,7 +231,60 @@ def step_impl(context, title, doneStatus, description):
 
 # ID005_DeleteTodo.feature
 
+@given('a Todo task does not exist')
+def step_impl(context):
+    response = requests.post('http://localhost:4567/todos', json={"title": "test"})
+    assert response.status_code == 201
+    context.todo_id = response.json()['id']
+    response = requests.delete(f'http://localhost:4567/todos/{context.todo_id}')
+    assert response.status_code == 200
 
+@when('the user deletes the Todo task')
+def step_impl(context):
+    response = requests.delete(f'http://localhost:4567/todos/{context.todo_id}')
+    context.response = response
+
+@when('the user deletes a relationship between the Todo and the Category')
+def step_impl(context):
+    response = requests.delete(f'http://localhost:4567/todos/{context.todo_id}/categories/{context.category_id}')
+    context.response = response
+
+@when('the user deletes a relationship between the Todo and the Project')
+def step_impl(context):
+    response = requests.delete(f'http://localhost:4567/todos/{context.todo_id}/tasksof/{context.project_id}')
+    context.response = response
+
+@then('the Todo task is successfully deleted')
+def step_impl(context):
+    response = context.response
+    assert response.status_code == 200
+
+@then('the relationship between the Todo and the Category is successfully deleted')
+def step_impl(context):
+    response = context.response
+    assert response.status_code == 200
+    get_response = requests.get('http://localhost:4567/todos/{context.todo_id}/categories')
+    if 'categories' in get_response.json():
+        for category in get_response.json()['categories']:
+            assert category['id'] != context.category_id
+
+@then('the relationship between the Todo and the Project is successfully deleted')
+def step_impl(context):
+    response = context.response
+    assert response.status_code == 200
+    get_response = requests.get('http://localhost:4567/todos/{context.todo_id}/tasksof')
+    if 'tasksof' in get_response.json():
+        for project in get_response.json()['tasksof']:
+            assert project['id'] != context.project_id
+
+@then('the system should return an error message with id "{error_message}" and status code "{status_code}"')
+def step_impl(context, error_message, status_code):
+    response = context.response
+    error_message = error_message + context.todo_id
+    print(error_message)
+    print(response.json()['errorMessages'][0])
+    assert response.json()['errorMessages'][0] == error_message
+    assert response.status_code == int(status_code)
 
 
 
