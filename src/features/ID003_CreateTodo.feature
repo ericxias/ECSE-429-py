@@ -3,7 +3,7 @@ Feature: Create a Todo Task Instance
     I want to create a todo task
     So I can organize the tasks I need to complete
     
-    Scenario: User creates a Todo task with (Normal Flow)
+    Scenario: User creates a Todo task (Normal Flow)
         When the user creates a Todo task with title "shred paperwork" and doneStatus "False" and description "shred all the paperwork"
         Then the Todo task is successfully created with title "shred paperwork", doneStatus "false", and description "shred all the paperwork"
 
