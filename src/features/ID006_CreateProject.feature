@@ -12,5 +12,5 @@ Feature: Create a Project Instance
         Then the Project is successfully created with title "Clean Up Desk", completed "false", active "false", and no description
 
     Scenario: User creates a Project with non boolean completed (Error Flow)
-        When the user creates a Project with title and completed "not a boolean" and active "False" and description "tidy up deskspace"
+        When the user creates a Project with title "Clean Up Desk" and completed "not a boolean" and active "False" and description "tidy up deskspace"
         Then the system should return an error message "Failed Validation: completed should be BOOLEAN" and status code "400"

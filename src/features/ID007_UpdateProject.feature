@@ -15,5 +15,5 @@ Feature: Update a Todo Task Instance
         Then the Project should have title "Clean Up Desk", completed "true", active "false", and description "sample description"
     
     Scenario: User updates Project with non boolean completed (Error Flow)
-        When the user updates a Project with new title "Clean Up Desk" and completed "not a boolean" and active "False" and description "tidy up deskspace"
-        Then the Project should return "Failed Validation: completed should be BOOLEAN" and status code "400"
+        When the user updates a Project using PUT with new title "Clean Up Desk", completed "not a boolean", active "False", and description "tidy up deskspace"
+        Then the system should return an error message "Failed Validation: completed should be BOOLEAN" and status code "400"

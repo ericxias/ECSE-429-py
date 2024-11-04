@@ -339,7 +339,7 @@ def step_impl(context, title, completed, active, description):
     assert response.json()['description'] == description
 
 @then('the Project is successfully created with title "{title}", completed "{completed}", active "{active}", and no description')
-def step_impl(context, title, completed, active, description):
+def step_impl(context, title, completed, active):
     response = context.response
     assert response.status_code == 201
     assert response.json()['title'] == title
@@ -374,6 +374,19 @@ def step_impl(context, title, completed, active, description):
         "description": description
     }
     response = requests.post(f'http://localhost:4567/projects/{context.project_id}', json=body)
+    context.response = response
+
+@when('the user updates a Project using PUT with new title "{title}", completed "{completed}", active "{active}", and description "{description}"')
+def step_impl(context, title, completed, active, description):
+    completed_bool = process_bool(completed)
+    active_bool = process_bool(active)
+    body = {
+        "title": title,
+        "completed": completed_bool,
+        "active": active_bool,
+        "description": description
+    }
+    response = requests.put(f'http://localhost:4567/projects/{context.project_id}', json=body)
     context.response = response
 
 @when('the user updates a Project with new title "{title}"')
