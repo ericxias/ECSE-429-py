@@ -302,9 +302,93 @@ def step_impl(context, error_message, status_code):
     assert response.json()['errorMessages'][0] == error_message
     assert response.status_code == int(status_code)
 
+# ID006_CreateProject.feature
 
+@when('the user creates a Project with title "{title}" and completed "{completed}" and active "{active}" and description "{description}"')
+def step_impl(context, title, completed, active, description):
+    completed_bool = process_bool(completed)
+    active_bool = process_bool(active)
+    body = {
+        "title": title,
+        "completed": completed_bool,
+        "active": active_bool,
+        "description": description
+        }
+    response = requests.post('http://localhost:4567/projects', json=body)
+    context.response = response
 
+@when('the user creates a Project with title "{title}" and completed "{completed}" and active "{active}"')
+def step_impl(context, title, completed, active):
+    completed_bool = process_bool(completed)
+    active_bool = process_bool(active)
+    body = {
+        "title": title,
+        "completed": completed_bool,
+        "active": active_bool,
+        }
+    response = requests.post('http://localhost:4567/projects', json=body)
+    context.response = response
 
+@then('the Project is successfully created with title "{title}", completed "{completed}", active "{active}", and description "{description}"')
+def step_impl(context, title, completed, active, description):
+    response = context.response
+    assert response.status_code == 201
+    assert response.json()['title'] == title
+    assert response.json()['completed'] == completed
+    assert response.json()['active'] == active
+    assert response.json()['description'] == description
+
+@then('the Project is successfully created with title "{title}", completed "{completed}", active "{active}", and no description')
+def step_impl(context, title, completed, active, description):
+    response = context.response
+    assert response.status_code == 201
+    assert response.json()['title'] == title
+    assert response.json()['completed'] == completed
+    assert response.json()['active'] == active
+    assert response.json()['description'] == ""
+
+#ID007_UpdateProject.feature
+
+@given('a Project with title "{title}", completed "{completed}", active "{active}", and description "{description}"')
+def step_impl(context, title, completed, active, description):
+    completed_bool = process_bool(completed)
+    active_bool = process_bool(active)
+    body = {
+        "title": title,
+        "completed": completed_bool,
+        "active": active_bool,
+        "description": description
+    }
+    response = requests.post('http://localhost:4567/projects', json=body)
+    assert response.status_code == 201
+    context.project_id = response.json()['id']
+
+@when('the user updates a Project with new title "{title}", completed "{completed}", active "{active}", and description "{description}"')
+def step_impl(context, title, completed, active, description):
+    completed_bool = process_bool(completed)
+    active_bool = process_bool(active)
+    body = {
+        "title": title,
+        "completed": completed_bool,
+        "active": active_bool,
+        "description": description
+    }
+    response = requests.post(f'http://localhost:4567/projects/{context.project_id}', json=body)
+    context.response = response
+
+@when('the user updates a Project with new title "{title}"')
+def step_impl(context, title):
+    response = requests.post(f'http://localhost:4567/projects/{context.project_id}', json={"title": title})
+    context.response = response
+
+@then('the Project should have title "{title}", completed "{completed}", active "{active}", and description "{description}"')
+def step_impl(context, title, completed, active, description):
+    response = context.response
+    assert response.status_code == 200
+    assert response.json()['title'] == title
+    assert response.json()['completed'] == completed
+    assert response.json()['active'] == active
+    assert response.json()['description'] == description
 
 
 
