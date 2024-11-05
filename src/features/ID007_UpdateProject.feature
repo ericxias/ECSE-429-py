@@ -4,7 +4,7 @@ Feature: Update a Todo Task Instance
     So that my projects are consistently kept up to date
 
     Background:
-    Given a Project with title "Sample Project", completed "true", active "false", and description "sample description"
+    Given a Project with title "Sample Project", completed "true", active "false", and description "sample description" already exists in the system
 
     Scenario: User updates all Project information (Normal Flow)
         When the user updates a Project with new title "Clean Up Desk", completed "False", active "True", and description "tidy up deskspace"
