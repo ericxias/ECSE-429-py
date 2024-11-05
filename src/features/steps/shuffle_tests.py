@@ -1,6 +1,7 @@
 import random
 import sys
 
+# based on my_behave.py by trivicious on https://stackoverflow.com/questions/64855049/behave-run-features-in-random-order
 # to run tests in random order -> python shuffle_tests.py
 
 # import behave runner package files
