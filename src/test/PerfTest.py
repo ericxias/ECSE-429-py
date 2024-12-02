@@ -152,34 +152,25 @@ def performance_test(num_todos, num_projects):
     # populate objects with random data
     random_data(num_todos, num_projects)
 
-    # reset CPU usage
-    psutil.cpu_percent(interval=None)  
     # measure time for each test
     create_time = test_post_create_todo()
     update_time = test_update_todo_with_put()
     delete_time = test_delete_todo()
 
-    # Memory (in MB) and CPU usage
-    process = psutil.Process()
-    memory_usage = process.memory_info().rss / (1024 ** 2)
-    cpu_usage = psutil.cpu_percent(interval=None)
-
-    return create_time, update_time, delete_time, memory_usage, cpu_usage
+    return create_time, update_time, delete_time
 
 def main():
-    num_objects = [5, 10, 50, 100, 200, 500]
+    num_objects = [5, 10, 25, 50, 100]
     results = []
 
     for num in num_objects:
         print(f"Performance test with {num} objects")
-        create_time, update_time, delete_time, memory_usage, cpu_usage = performance_test(num, num)
-        print(f"CPU Usage: {cpu_usage}%")
-        print(f"Memory Usage: {memory_usage} MB")
-        results.append([num, create_time, update_time, delete_time, memory_usage, cpu_usage])
+        create_time, update_time, delete_time = performance_test(num, num)
+        results.append([num, create_time, update_time, delete_time])
 
     # Plot the results
-    num, create_times, update_times, delete_times, memory_usages, cpu_usages = zip(*results)
-    plt.figure(figsize=(15, 8))
+    num, create_times, update_times, delete_times= zip(*results)
+    plt.figure(figsize=(10, 5))
 
     plt.subplot(3, 1, 1)
     plt.plot(num, create_times, label='Create Time')
@@ -190,21 +181,6 @@ def main():
     plt.legend()
     plt.title('Transaction Time vs Number of Objects')
 
-    plt.subplot(3, 1, 2)
-    plt.plot(num, memory_usages, label='Memory Usage')
-    plt.xlabel('Number of Objects')
-    plt.ylabel('Memory (MB)')
-    plt.legend()
-    plt.title('Memory Usage vs Number of Objects')
-
-    plt.subplot(3, 1, 3)
-    plt.plot(num, cpu_usages, label='CPU Usage')
-    plt.xlabel('Number of Objects')
-    plt.ylabel('CPU Usage (%)')
-    plt.legend()
-    plt.title('CPU Usage vs Number of Objects')
-
-    plt.tight_layout()
     plt.show()
 
 if __name__ == '__main__':
