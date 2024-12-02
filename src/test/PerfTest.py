@@ -153,33 +153,49 @@ def performance_test(num_todos, num_projects):
     random_data(num_todos, num_projects)
 
     # measure time for each test
-    create_time = test_post_create_todo()
-    update_time = test_update_todo_with_put()
-    delete_time = test_delete_todo()
+    todo_create_time = test_post_create_todo()
+    todo_update_time = test_update_todo_with_put()
+    todo_delete_time = test_delete_todo()
 
-    return create_time, update_time, delete_time
+    project_create_time = test_post_create_project()
+    project_update_time = test_put_update_project()
+    project_delete_time = test_delete_project()
+
+    return todo_create_time, todo_update_time, todo_delete_time, project_create_time, project_update_time, project_delete_time
 
 def main():
     num_objects = [5, 10, 25, 50, 100]
-    results = []
+    todo_results = []
+    project_results = []
 
     for num in num_objects:
         print(f"Performance test with {num} objects")
-        create_time, update_time, delete_time = performance_test(num, num)
-        results.append([num, create_time, update_time, delete_time])
+        todo_create_time, todo_update_time, todo_delete_time, project_create_time, project_update_time, project_delete_time = performance_test(num, num)
+        todo_results.append([num, todo_create_time, todo_update_time, todo_delete_time])
+        project_results.append([num, project_create_time, project_update_time, project_delete_time])
 
     # Plot the results
-    num, create_times, update_times, delete_times= zip(*results)
+    num, todo_create_times, todo_update_times, todo_delete_times= zip(*todo_results)
+    num, project_create_times, project_update_times, project_delete_times = zip(*project_results)
     plt.figure(figsize=(10, 5))
 
     plt.subplot(3, 1, 1)
-    plt.plot(num, create_times, label='Create Time')
-    plt.plot(num, update_times, label='Update Time')
-    plt.plot(num, delete_times, label='Delete Time')
+    plt.plot(num, todo_create_times, label='Create Time')
+    plt.plot(num, todo_update_times, label='Update Time')
+    plt.plot(num, todo_delete_times, label='Delete Time')
     plt.xlabel('Number of Objects')
     plt.ylabel('Time (s)')
     plt.legend()
-    plt.title('Transaction Time vs Number of Objects')
+    plt.title('Todo Transaction Time vs Number of Objects')
+
+    plt.subplot(3, 1, 3)
+    plt.plot(num, project_create_times, label='Create Time')
+    plt.plot(num, project_update_times, label='Update Time')
+    plt.plot(num, project_delete_times, label='Delete Time')
+    plt.xlabel('Number of Objects')
+    plt.ylabel('Time (s)')
+    plt.legend()
+    plt.title('Project Transaction Time vs Number of Objects')
 
     plt.show()
 
