@@ -9,6 +9,7 @@ def random_string(length):
     return ''.join(random.choices(string.ascii_letters, k=length))
 
 def random_data(num_todos, num_projects):
+    # populate the server with random data: we focus on todos and projects
     for _ in range(num_todos):
         requests.post('http://localhost:4567/todos', json=
                       {'title': random_string(5), 
@@ -21,6 +22,7 @@ def random_data(num_todos, num_projects):
                        "active": random.choice([True, False])})
         
 def measure_time(func):
+    # wrapper function to measure time -> retrieve initial time, run the function, retrieve end time, calculate the difference
     def wrapper(*args, **kwargs):
         start = time.time()
         func(*args, **kwargs)
@@ -164,13 +166,16 @@ def performance_test(num_todos, num_projects):
     return todo_create_time, todo_update_time, todo_delete_time, project_create_time, project_update_time, project_delete_time
 
 def main():
-    num_objects = [5, 10, 25, 50, 100]
+    # number of objects in the system to test
+    num_objects = [5, 10, 25, 50, 75, 100]
     todo_results = []
     project_results = []
 
+    # run performance test for each number of objects
     for num in num_objects:
         print(f"Performance test with {num} objects")
         todo_create_time, todo_update_time, todo_delete_time, project_create_time, project_update_time, project_delete_time = performance_test(num, num)
+        # store the results in arrays
         todo_results.append([num, todo_create_time, todo_update_time, todo_delete_time])
         project_results.append([num, project_create_time, project_update_time, project_delete_time])
 
