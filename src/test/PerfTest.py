@@ -93,6 +93,61 @@ def test_update_todo_with_put():
         assert response3.json() == {"errorMessages":["Invalid GUID for 1 entity todo"]}
         assert response3.status_code == 404
 
+@measure_time
+def test_post_create_project():
+    # Test creation.
+    response = requests.post('http://localhost:4567/projects', json={"title":"test","completed": False,"active": False,"description":"test description"})
+    assert response.status_code == 201
+    project_id = response.json()["id"]
+
+    response2 = requests.get('http://localhost:4567/projects/' + str(project_id))
+    assert response2.json() == {"projects":[{"id":project_id,"title":"test","completed":"false","active":"false","description":"test description"}]}
+
+
+@measure_time
+def test_delete_project():
+    # Test delete project with id.
+    response = requests.get('http://localhost:4567/projects')
+    projects = response.json()
+
+     # Check if any projects exist.
+    if response.status_code == 200 and response.json()["projects"] != []:
+        project_id = projects["projects"][0]["id"]
+        response2 = requests.delete('http://localhost:4567/projects/' + str(project_id))
+        assert response2.status_code == 200
+
+        # Check if the project is deleted.
+        response3 = requests.get('http://localhost:4567/projects/' + str(project_id))
+        assert response3.json() == {"errorMessages":["Could not find an instance with projects/" + str(project_id)]}
+        assert response3.status_code == 404
+    
+    else:
+        # Test the error message when attempting to delete project with an id that does not exist.
+        response2 = requests.delete('http://localhost:4567/projects/1')
+        assert response2.json() == {"errorMessages":["Could not find an instance with projects/1"]}
+        assert response2.status_code == 404
+
+@measure_time
+def test_put_update_project():
+    # Get all projects.
+    response = requests.get('http://localhost:4567/projects')
+    projects = response.json()
+
+    if response.status_code == 200 and response.json()["projects"] != []:
+        # Get project ID.
+        project_id = projects["projects"][0]["id"]
+        response1 = requests.put('http://localhost:4567/projects/' + str(project_id), json={"title":"test2","completed": False, "active": False, "description":"test2 description"})
+        assert response1.status_code == 200
+
+        response2 = requests.get('http://localhost:4567/projects/' + str(project_id))
+        assert response1.json() == response2.json()["projects"][0]
+    
+    else:
+        # Update project with invalid ID.
+        response3 = requests.put('http://localhost:4567/projects/1', json={"title":"test2","completed": False, "active": False, "description":"test2 description"})
+        assert response3.json() == {"errorMessages":["Invalid GUID for 1 entity todo"]}
+        assert response3.status_code == 404
+
 def performance_test(num_todos, num_projects):
     # populate objects with random data
     random_data(num_todos, num_projects)
